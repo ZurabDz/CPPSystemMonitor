@@ -24,7 +24,7 @@ string LinuxParser::OperatingSystem() {
   string key{};
   string value{};
 
-  ifstream inputStream(Constants::kOSPath());
+  ifstream inputStream(Constants::kOSPath);
   if (inputStream.is_open()) {
     while (std::getline(inputStream, line)) {
       line = Util::CustomReplace(line);
@@ -47,8 +47,10 @@ string LinuxParser::Kernel() {
   string os{}, kernel{};
   string placeHolder{};
 
-  ifstream inputStream(Constants::kProcDirectory() +
-                       Constants::kVersionFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
+           Constants::kVersionFilename);
+  ifstream inputStream(buff);
   if (inputStream.is_open()) inputStream >> os >> placeHolder >> kernel;
 
   return kernel;
@@ -58,8 +60,7 @@ vector<int> &LinuxParser::Pids(vector<int> &pids) {
   string fileName{};
   int pid{};
 
-  for (const auto &entry :
-       fs::directory_iterator(Constants::kProcDirectory())) {
+  for (const auto &entry : fs::directory_iterator(Constants::kProcDirectory)) {
     if (entry.is_directory()) {
       fileName = entry.path().filename();
       if (std::all_of(fileName.begin(), fileName.end(), isdigit)) {
@@ -74,9 +75,10 @@ vector<int> &LinuxParser::Pids(vector<int> &pids) {
 
 float LinuxParser::MemoryUtilization() {
   string line{};
-  ifstream inputStream(Constants::kProcDirectory() +
-                       Constants::kMemInfoFilename());
-
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
+           Constants::kMemInfoFilename);
+  ifstream inputStream(buff);
   int totalValue{}, freeValue{}, value{};
   string key{};
   short counter{0};
@@ -105,8 +107,10 @@ float LinuxParser::MemoryUtilization() {
 unsigned long int LinuxParser::UpTime() {
   std::string line{};
   long upTime{};
-  ifstream inputStream(Constants::kProcDirectory() +
-                       Constants::kUptimeFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
+           Constants::kUptimeFilename);
+  ifstream inputStream(buff);
   if (inputStream.is_open()) {
     std::getline(inputStream, line);
     std::stringstream lineStream(line);
@@ -118,7 +122,10 @@ long LinuxParser::Jiffies() {
   string line;
   string key;
   long jiffies = 0;
-  std::ifstream filestream(Constants::kProcDirectory() + Constants::kStatFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
+           Constants::kStatFilename);
+  std::ifstream filestream(buff);
   if (filestream.is_open()) {
     std::getline(filestream, line);
     std::stringstream linestream(line);
@@ -137,15 +144,15 @@ long LinuxParser::Jiffies() {
   return jiffies;
 }
 
-//long LinuxParser::Jiffies() {
+// long LinuxParser::Jiffies() {
 //  string line{};
 //  string key{};
 //
 //  long jiffies{0};
 //  int value{0};
 //
-//  ifstream fileStream(Constants::kProcDirectory() + Constants::kStatFilename());
-//  if (fileStream.is_open()) {
+//  ifstream fileStream(Constants::kProcDirectory() +
+//  Constants::kStatFilename()); if (fileStream.is_open()) {
 //    std::getline(fileStream, line);
 //    std::stringstream stream(line);
 //
@@ -165,9 +172,10 @@ unsigned long LinuxParser::ActiveJiffies(int pid) {
   unsigned long jiffies{};
   unsigned long processJiffies{};
 
-  string kPidDirectory = std::to_string(pid);
-  ifstream inputStream(Constants::kProcDirectory() + kPidDirectory + '/' +
-                       Constants::kStatFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%d/%s", Constants::kProcDirectory,
+           pid, Constants::kStatFilename);
+  ifstream inputStream(buff);
   float runTime{1};
   if (inputStream.is_open()) {
     std::getline(inputStream, line);
@@ -200,8 +208,10 @@ std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
   int totalProcesses{0};
   int runningProcesses{0};
   int found{};
-  ifstream inputStream(Constants::kProcDirectory() +
-                       Constants::kStatFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
+           Constants::kStatFilename);
+  ifstream inputStream(buff);
   if (inputStream.is_open()) {
     while (std::getline(inputStream, line)) {
       std::istringstream lineStream(line);
@@ -222,9 +232,10 @@ std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
 
 string LinuxParser::Command(int pid) {
   std::string cmdLine{};
-  const string kPidDirectory = std::to_string(pid);
-  ifstream inputStream(Constants::kProcDirectory() + kPidDirectory +
-                       Constants::kCmdlineFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory,
+           pid, Constants::kCmdlineFilename);
+  ifstream inputStream(buff);
   if (inputStream.is_open()) std::getline(inputStream, cmdLine);
   return cmdLine;
 }
@@ -233,10 +244,10 @@ string LinuxParser::Ram(int pid) {
   string line{};
   string key{};
   unsigned long ram{};
-  string kPidDirectory{to_string(pid)};
-
-  ifstream inputStream(Constants::kProcDirectory() + kPidDirectory +
-                       Constants::kStatusFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
+           Constants::kStatFilename);
+  ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
     while (std::getline(inputStream, line)) {
@@ -256,9 +267,10 @@ unsigned long int LinuxParser::UpTime(int pid) {
   string line{};
   string placeHolder;
   unsigned long startTime{};
-  string kPidDirectory = std::to_string(pid);
-  ifstream inputStream(Constants::kProcDirectory() + kPidDirectory +
-                       Constants::kStatFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
+           Constants::kStatFilename);
+  ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
     std::getline(inputStream, line);
@@ -275,7 +287,7 @@ unsigned long int LinuxParser::UpTime(int pid) {
   return startTime / sysconf(_SC_CLK_TCK);
 }
 
-//unsigned long LinuxParser::IdleJiffies() {
+// unsigned long LinuxParser::IdleJiffies() {
 //  string line{};
 //  string key{};
 //
@@ -301,7 +313,10 @@ long LinuxParser::IdleJiffies() {
   string line;
   string key;
   long idleJiffies = 0;
-  std::ifstream filestream(Constants::kProcDirectory() + Constants::kStatFilename());
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
+           Constants::kStatFilename);
+  std::ifstream filestream(buff);
   if (filestream.is_open()) {
     std::getline(filestream, line);
     std::stringstream linestream(line);
@@ -328,9 +343,11 @@ string LinuxParser::Uid(int pid) {
   string line;
   string key;
   string uid;
-  string kPidDirectory = std::to_string(pid);
-  ifstream inputStream(Constants::kProcDirectory() + kPidDirectory +
-                       Constants::kStatusFilename());
+
+  char buff[32];
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
+           Constants::kStatusFilename);
+  ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
     while (std::getline(inputStream, line)) {
@@ -352,7 +369,7 @@ string LinuxParser::User(int pid) {
   string uid;
   string placeHolder;
 
-  ifstream fileStream(Constants::kPasswordPath());
+  ifstream fileStream(Constants::kPasswordPath);
   if (fileStream.is_open()) {
     while (std::getline(fileStream, line)) {
       std::replace(line.begin(), line.end(), ':', ' ');
