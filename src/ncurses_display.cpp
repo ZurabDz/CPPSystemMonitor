@@ -43,7 +43,7 @@ void NCursesDisplay::DisplaySystem(System &system, WINDOW *window) {
   mvwprintw(window, ++row, 2, "CPU: ");
   wattron(window, COLOR_PAIR(1));
   mvwprintw(window, row, 10, "");
-  wprintw(window, ProgressBar(system.Cpu().Utilization()).c_str());
+  wprintw(window, ProgressBar(system.ProcessorUtilization()).c_str());
   wattroff(window, COLOR_PAIR(1));
 
   mvwprintw(window, ++row, 2, "Memory: ");
@@ -67,12 +67,12 @@ void NCursesDisplay::DisplaySystem(System &system, WINDOW *window) {
 void NCursesDisplay::DisplayProcesses(std::vector<Process> &processes,
                                       WINDOW *window, int n) {
   int row{0};
-  int const pidColumn{2};
-  int const userColumn{9};
-  int const cpuColumn{20};
-  int const ramColumn{28};
-  int const timeColumn{37};
-  int const commandColumn{46};
+  constexpr const int pidColumn{2};
+  constexpr const int userColumn{9};
+  constexpr const int cpuColumn{20};
+  constexpr const int ramColumn{28};
+  constexpr const int timeColumn{37};
+  constexpr const int commandColumn{46};
 
   wattron(window, COLOR_PAIR(2));
   mvwprintw(window, ++row, pidColumn, "PID");
@@ -104,11 +104,11 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process> &processes,
   }
 }
 
-std::string NCursesDisplay::ProgressBar(float percent) {
+std::string NCursesDisplay::ProgressBar(double percent) {
   std::string result{"0%"};
   int size{50};
 
-  float bars{percent * static_cast<float>(size)};
+  double bars{percent * static_cast<double>(size)};
   for (int i{0}; i < size; ++i) result.push_back(i < bars ? '|' : ' ');
   char str[8];
   snprintf(str, sizeof(str), "%.1f", percent * 100);
