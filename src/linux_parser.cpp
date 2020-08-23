@@ -5,6 +5,7 @@
 #include "linux_parser.hpp"
 
 #include <unistd.h>
+#include <limits>
 
 #include <algorithm>
 #include <filesystem>
@@ -350,15 +351,15 @@ string LinuxParser::Uid(int pid) {
   ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
-    while (std::getline(inputStream, line)) {
-      std::istringstream lineStream(line);
-      while (lineStream >> key) {
-        if (key == "Uid:") {
-          lineStream >> uid;
-          break;
-        }
-      }
+    for(int i{0}; i < 9; ++i) {
+      inputStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
+
+    getline(inputStream, line);
+    std::istringstream ss{line};
+
+    ss >> key;
+    ss >> uid;
   }
   return uid;
 }
