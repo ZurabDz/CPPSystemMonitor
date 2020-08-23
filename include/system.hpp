@@ -15,9 +15,9 @@ using std::string;
 
 class System {
  public:
-  Processor& Cpu();
   std::vector<Process>& Processes();
 
+  [[nodiscard]] double ProcessorUtilization() const;
   [[nodiscard]] std::string OperatingSystem() const;
   [[nodiscard]] std::string Kernel() const;
 
@@ -27,7 +27,6 @@ class System {
 
 
  private:
-  Processor cpu_{};
   std::vector<Process> processes_{};
 };
 
