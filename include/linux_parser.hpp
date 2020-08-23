@@ -13,18 +13,19 @@ using std::string;
 
 namespace LinuxParser {
 
-struct Constants {
-  static string kProcDirectory() { return "/proc/"; };
-  static string kCmdlineFilename() { return "/cmdline"; };
-  static string kCpuinfoFilename() { return "/cpuinfo"; };
-  static string kStatusFilename() { return "/status"; };
-  static string kStatFilename() { return "/stat"; };
-  static string kUptimeFilename() { return "uptime"; };
-  static string kMemInfoFilename() { return "meminfo"; };
-  static string kVersionFilename() { return "/version"; };
-  static string kOSPath() { return "/etc/os-release"; };
-  static string kPasswordPath() { return "/etc/passwd"; };
-};
+namespace Constants{
+  constexpr const char* const kProcDirectory = "/proc/";
+  constexpr const char* const kCmdlineFilename = "/cmdline";
+  constexpr const char* const kCpuinfoFilename = "/cpuinfo";
+  constexpr const char* const kStatusFilename = "/status";
+  constexpr const char* const kStatFilename = "/stat";
+  constexpr const char* const kUptimeFilename = "uptime";
+  constexpr const char* const kMemInfoFilename = "meminfo";
+  constexpr const char* const kVersionFilename = "/version";
+  constexpr const char* const kOSPath = "/etc/os-release";
+  constexpr const char* const kPasswordPath = "/etc/passwd";
+
+}
 
 // System
 [[nodiscard]] string OperatingSystem();
