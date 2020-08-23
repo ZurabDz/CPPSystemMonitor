@@ -22,8 +22,6 @@ using std::size_t;
 using std::string;
 using std::vector;
 
-Processor& System::Cpu() { return cpu_; }
-
 vector<Process>& System::Processes() {
   vector<int> pids;
   pids = LinuxParser::Pids(pids);
@@ -59,4 +57,8 @@ std::pair<int, int> System::TotalAndRunningProcesses() const {
 
 string System::UpTime() const {
   return Util::ElapsedTime(LinuxParser::UpTime());
+}
+double System::ProcessorUtilization() const {
+  return static_cast<double>(LinuxParser::ActiveJiffies()) /
+         static_cast<double>(LinuxParser::Jiffies());
 }
