@@ -22,7 +22,7 @@ std::string Util::ElapsedTime(unsigned long seconds) {
   short minute = (seconds % 3600) / 60;
   short second = (seconds % 3600) % 60;
 
-  char buffer[9];
+  char buffer[32];
   snprintf(buffer, sizeof(buffer), "%.2d:%.2d:%.2d", hour, minute, second);
   std::string elapsedTime(buffer);
 
