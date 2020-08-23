@@ -14,7 +14,7 @@ using std::string;
 using std::vector;
 
 Process::Process(const int& pid, float& cpuUtil)
-    : pid_{pid}, cpuUtilization_{cpuUtil} {};
+    : pid_{pid}, cpuUtilization_{cpuUtil} {}
 int Process::Pid() const { return pid_; }
 float Process::CpuUtilization() const { return cpuUtilization_; }
 string Process::Command() const { return LinuxParser::Command(pid_); }
