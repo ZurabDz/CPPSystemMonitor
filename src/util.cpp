@@ -19,11 +19,11 @@ std::string &Util::CustomReplace(std::string &line, const char &old1,
 
 std::string Util::ElapsedTime(unsigned long seconds) {
   const unsigned int hour = seconds / 3600;
-  short minute = (seconds % 3600) / 60;
-  short second = (seconds % 3600) % 60;
+  unsigned int minute = (seconds % 3600) / 60;
+  unsigned int second = (seconds % 3600) % 60;
 
   char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%.2d:%.2d:%.2d", hour, minute, second);
+  snprintf(buffer, sizeof(buffer), "%.2u:%.2u:%.2u", hour, minute, second);
   std::string elapsedTime(buffer);
 
   return elapsedTime;
