@@ -9,8 +9,6 @@
 #include <vector>
 
 #include "process.hpp"
-#include "processor.hpp"
-
 using std::string;
 
 class System {

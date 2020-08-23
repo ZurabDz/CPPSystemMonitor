@@ -15,7 +15,6 @@
 
 #include "linux_parser.hpp"
 #include "process.hpp"
-#include "processor.hpp"
 #include "util.hpp"
 
 using std::size_t;
