@@ -9,7 +9,7 @@
 
 class Process {
  public:
-  Process(const int& pid, float& cpuUtil);
+  Process(const int& pid_, double& cpuUtil_);
 
   [[nodiscard]] int Pid() const;
   [[nodiscard]] float CpuUtilization () const;
@@ -20,8 +20,8 @@ class Process {
   bool operator<(Process& otherProcess);
 
  private:
-  int pid_{};
-  float cpuUtilization_{};
+  int pid{};
+  double cpuUtilization{};
 };
 
 #endif  // PLAYGROUND_PROCESS_HPP
