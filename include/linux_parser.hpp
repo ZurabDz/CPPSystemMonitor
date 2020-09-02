@@ -30,10 +30,10 @@ namespace Constants{
 // System
 [[nodiscard]] string OperatingSystem();
 [[nodiscard]] string Kernel();
-std::vector<int>& Pids(std::vector<int>&);
+std::vector<int> Pids();
 std::pair<int, int> TotalAndRunningProcesses();
 float MemoryUtilization();
-[[nodiscard]] unsigned long int UpTime();
+[[nodiscard]] double UpTime();
 [[nodiscard]] unsigned long int UpTime(int pid);
 
 enum ProcessCpuStates {
@@ -47,7 +47,7 @@ enum ProcessCpuStates {
 long Jiffies();
 long IdleJiffies();
 unsigned long ActiveJiffies();
-unsigned long ActiveJiffies(int pid);
+double ActiveJiffies(int pid);
 
 
 // Processes
