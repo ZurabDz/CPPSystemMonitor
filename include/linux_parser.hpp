@@ -29,6 +29,7 @@ namespace Constants{
 
 // System
 [[nodiscard]] string OperatingSystem();
+
 [[nodiscard]] string Kernel();
 std::vector<int> Pids();
 std::pair<int, int> TotalAndRunningProcesses();
