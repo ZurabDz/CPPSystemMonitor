@@ -18,26 +18,18 @@
 #include "util.hpp"
 
 using std::size_t;
-using std::string;
 using std::vector;
 
-vector<Process>& System::Processes() {
-  vector<int> pids;
-  pids = LinuxParser::Pids(pids);
-
-  if (!processes_.empty()) processes_.clear();
-
-  for (const auto& pid : pids) {
-//    unsigned elapsedTime = LinuxParser::UpTime() - LinuxParser::UpTime(pid);
-//        float cpuUtil = (static_cast<float>(LinuxParser::ActiveJiffies(pid)) /
-//                         static_cast<float>(sysconf(_SC_CLK_TCK))) /
-//                        static_cast<float>(elapsedTime) * 100;
-
-    auto cpuUtil = static_cast<float>(LinuxParser::ActiveJiffies(pid));
-    processes_.emplace_back(pid, cpuUtil);
+vector<Process>& System::FillProcesses() {
+  vector<int> pids{LinuxParser::Pids()};
+  if (!processes.empty()) processes.clear();
+  for (auto const pid : pids) {
+    auto cpuUtil = static_cast<double>(LinuxParser::ActiveJiffies(pid));
+//    processes.emplace_back(pid, cpuUtil);
   }
-  std::sort(processes_.rbegin(), processes_.rend());
-  return processes_;
+
+  std::sort(processes.rbegin(), processes.rend());
+  return processes;
 }
 
 std::string System::OperatingSystem() const {
