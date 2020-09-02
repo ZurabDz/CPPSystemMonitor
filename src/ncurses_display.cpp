@@ -23,7 +23,7 @@ void NCursesDisplay::Display(System &system, int n) {
     box(processWindow, 0, 0);
 
     DisplaySystem(system, systemWindow);
-    DisplayProcesses(system.Processes(), processWindow, n);
+    DisplayProcesses(system, processWindow);
     wrefresh(systemWindow);
     wrefresh(processWindow);
     refresh();
@@ -64,15 +64,15 @@ void NCursesDisplay::DisplaySystem(System &system, WINDOW *window) {
   wrefresh(window);
 }
 
-void NCursesDisplay::DisplayProcesses(std::vector<Process> &processes,
-                                      WINDOW *window, int n) {
+void NCursesDisplay::DisplayProcesses(System& system,
+                                      WINDOW *window) {
   int row{0};
   constexpr const int pidColumn{2};
   constexpr const int userColumn{9};
   constexpr const int cpuColumn{20};
-  constexpr const int ramColumn{28};
-  constexpr const int timeColumn{37};
-  constexpr const int commandColumn{46};
+  constexpr const int ramColumn{35};
+  constexpr const int timeColumn{50};
+  constexpr const int commandColumn{65};
 
   wattron(window, COLOR_PAIR(2));
   mvwprintw(window, ++row, pidColumn, "PID");
@@ -86,29 +86,29 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process> &processes,
   float cpu{};
   char buffer[6];
   std::string command{};
-
-  // TODO: Maybe vector has less elements than n...
-  for (int i = 0; i < n; ++i) {
-    mvwprintw(window, ++row, pidColumn,
-              std::to_string(processes[i].Pid()).c_str());
-    mvwprintw(window, row, userColumn, processes[i].User().c_str());
-    cpu = processes[i].CpuUtilization();
-
-    snprintf(buffer, sizeof(buffer), "%.2f", cpu);
-    mvwprintw(window, row, cpuColumn, buffer);
-    mvwprintw(window, row, ramColumn, processes[i].Ram().c_str());
-    mvwprintw(window, row, timeColumn,
-              Util::ElapsedTime(processes[i].UpTime()).c_str());
-    command = processes[i].Command().substr(0, window->_maxx - 46);
-    mvwprintw(window, row, commandColumn, command.c_str());
+  auto processes = system.FillProcesses();
+  mvwprintw(window, ++row, pidColumn, "test");
+  for (auto &process : processes){
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+//    mvwprintw(window, ++row, pidColumn + 5, /*std::to_string(process.Pid()).c_str())*/"ss");
+//    mvwprintw(window, row, userColumn, process.User().c_str());
+//    cpu = process.CpuUtilization();
+//
+//    snprintf(buffer, sizeof(buffer), "%.2f", cpu);
+//    mvwprintw(window, row, cpuColumn, buffer);
+//    mvwprintw(window, row, ramColumn, process.Ram().c_str());
+//    mvwprintw(window, row, timeColumn,
+//              Util::ElapsedTime(process.UpTime()).c_str());
+//    command = process.Command().substr(0, window->_maxx - 46);
+//    mvwprintw(window, row, commandColumn, command.c_str());
   }
 }
 
 std::string NCursesDisplay::ProgressBar(double percent) {
   std::string result{"0%"};
-  int size{50};
+  double size{50};
 
-  double bars{percent * static_cast<double>(size)};
+  double bars{percent * size};
   for (int i{0}; i < size; ++i) result.push_back(i < bars ? '|' : ' ');
   char str[8];
   snprintf(str, sizeof(str), "%.1f", percent * 100);
