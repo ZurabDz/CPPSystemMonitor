@@ -10,6 +10,7 @@
 #include "system.hpp"
 
 namespace NCursesDisplay {
+
 void Display(System& system, int n);
 void DisplaySystem(System& system, WINDOW* window);
 void DisplayProcesses(System& system, WINDOW* window);
