@@ -13,14 +13,14 @@ using std::string;
 // using std::to_string;
 using std::vector;
 
-Process::Process(const int& pid, float& cpuUtil)
-    : pid_{pid}, cpuUtilization_{cpuUtil} {}
-int Process::Pid() const { return pid_; }
-float Process::CpuUtilization() const { return cpuUtilization_; }
-string Process::Command() const { return LinuxParser::Command(pid_); }
-string Process::Ram() { return LinuxParser::Ram(pid_);}
-string Process::User() { return LinuxParser::User(pid_); }
-unsigned long Process::UpTime() { return LinuxParser::UpTime(pid_); }
+Process::Process(const int& pid_, double& cpuUtil_)
+    : pid{pid_}, cpuUtilization{cpuUtil_} {}
+int Process::Pid() const { return pid; }
+float Process::CpuUtilization() const { return cpuUtilization; }
+string Process::Command() const { return LinuxParser::Command(pid); }
+string Process::Ram() { return LinuxParser::Ram(pid);}
+string Process::User() { return LinuxParser::User(pid); }
+unsigned long Process::UpTime() { return LinuxParser::UpTime(pid); }
 bool Process::operator<(Process& otherProcess) {
   return this->CpuUtilization() < otherProcess.CpuUtilization();
 }
