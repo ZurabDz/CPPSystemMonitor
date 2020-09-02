@@ -5,11 +5,10 @@
 #include "linux_parser.hpp"
 
 #include <unistd.h>
-#include <limits>
 
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
+#include <limits>
 
 #include "util.hpp"
 
@@ -57,7 +56,9 @@ string LinuxParser::Kernel() {
   return kernel;
 }
 
-vector<int> &LinuxParser::Pids(vector<int> &pids) {
+vector<int> LinuxParser::Pids() {
+  vector<int> pids;
+  pids.reserve(64);
   string fileName{};
   int pid{};
 
@@ -105,9 +106,9 @@ float LinuxParser::MemoryUtilization() {
          static_cast<float>(totalValue);
 }
 
-unsigned long int LinuxParser::UpTime() {
+double LinuxParser::UpTime() {
   std::string line{};
-  long upTime{};
+  double upTime{};
   char buff[32];
   snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
            Constants::kUptimeFilename);
@@ -119,6 +120,7 @@ unsigned long int LinuxParser::UpTime() {
   }
   return upTime;
 }
+
 long LinuxParser::Jiffies() {
   string line;
   string key;
@@ -145,43 +147,22 @@ long LinuxParser::Jiffies() {
   return jiffies;
 }
 
-// long LinuxParser::Jiffies() {
-//  string line{};
-//  string key{};
-//
-//  long jiffies{0};
-//  int value{0};
-//
-//  ifstream fileStream(Constants::kProcDirectory() +
-//  Constants::kStatFilename()); if (fileStream.is_open()) {
-//    std::getline(fileStream, line);
-//    std::stringstream stream(line);
-//
-//    std::string cpu;
-//    stream >> cpu;
-//
-//    while (stream >> value) jiffies += value;
-//  }
-//
-//  return jiffies;
-//}
-
-unsigned long LinuxParser::ActiveJiffies(int pid) {
+double LinuxParser::ActiveJiffies(int pid) {
   string line{};
   string placeholder{};
 
-  unsigned long jiffies{};
-  unsigned long processJiffies{};
+  double jiffies{};
+  double processJiffies{};
 
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d/%s", Constants::kProcDirectory,
-           pid, Constants::kStatFilename);
+  snprintf(buff, sizeof(buff), "%s%d/%s", Constants::kProcDirectory, pid,
+           Constants::kStatFilename);
   ifstream inputStream(buff);
   float runTime{1};
   if (inputStream.is_open()) {
     std::getline(inputStream, line);
     std::istringstream lineStream(line);
-    float startTime{};
+    double startTime{};
 
     for (int tokenId = 1; tokenId < 23; ++tokenId) {
       if (tokenId == ProcessCpuStates::kCstime ||
@@ -193,14 +174,19 @@ unsigned long LinuxParser::ActiveJiffies(int pid) {
 
       } else if (tokenId == 22) {
         lineStream >> tokenId;
-      } else
+      } else {
         lineStream >> placeholder;
-    }
+        lineStream.clear();
+        lineStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
 
-    runTime = UpTime() - startTime / static_cast<float>(sysconf(_SC_CLK_TCK));
+      runTime =
+          (UpTime() - startTime) / static_cast<double>(sysconf(_SC_CLK_TCK));
+    }
   }
 
-  return (processJiffies / sysconf(_SC_CLK_TCK)) / runTime * 100;
+  return (processJiffies / static_cast<double>(sysconf(_SC_CLK_TCK))) /
+         runTime * 100;
 }
 
 std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
@@ -234,8 +220,8 @@ std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
 string LinuxParser::Command(int pid) {
   std::string cmdLine{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory,
-           pid, Constants::kCmdlineFilename);
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
+           Constants::kCmdlineFilename);
   ifstream inputStream(buff);
   if (inputStream.is_open()) std::getline(inputStream, cmdLine);
   return cmdLine;
@@ -288,28 +274,6 @@ unsigned long int LinuxParser::UpTime(int pid) {
   return startTime / sysconf(_SC_CLK_TCK);
 }
 
-// unsigned long LinuxParser::IdleJiffies() {
-//  string line{};
-//  string key{};
-//
-//  unsigned long idleJiffies{};
-//  ifstream fileStream(Constants::kProcDirectory() + "stat");
-//  unsigned long value{};
-//
-//  if (fileStream.is_open()) {
-//    fileStream >> key;
-//
-//    for (int i = 0; i < 5; ++i) {
-//      if (i > 2) {
-//        fileStream >> value;
-//        idleJiffies += value;
-//      } else {
-//        fileStream >> value;
-//      }
-//    }
-//  }
-//  return idleJiffies;
-//}
 long LinuxParser::IdleJiffies() {
   string line;
   string key;
@@ -351,7 +315,7 @@ string LinuxParser::Uid(int pid) {
   ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
-    for(int i{0}; i < 9; ++i) {
+    for (int i{0}; i < 9; ++i) {
       inputStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
