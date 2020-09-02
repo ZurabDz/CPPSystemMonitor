@@ -13,7 +13,7 @@ using std::string;
 
 class System {
  public:
-  std::vector<Process>& Processes();
+  [[nodiscard]] std::vector<Process>& FillProcesses();
 
   [[nodiscard]] double ProcessorUtilization() const;
   [[nodiscard]] std::string OperatingSystem() const;
@@ -25,7 +25,7 @@ class System {
 
 
  private:
-  std::vector<Process> processes_{};
+  std::vector<Process> processes;
 };
 
 #endif  // PLAYGROUND_SYSTEM_HPP
