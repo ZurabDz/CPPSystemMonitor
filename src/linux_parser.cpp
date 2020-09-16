@@ -5,11 +5,14 @@
 #include "linux_parser.hpp"
 
 #include <unistd.h>
+#include <iostream>
 
 #include <algorithm>
 #include <filesystem>
+#include <iostream>
 #include <limits>
 
+#include "constants.h"
 #include "util.hpp"
 
 using std::ifstream;
@@ -19,67 +22,59 @@ using std::vector;
 
 namespace fs = std::filesystem;
 
-string LinuxParser::OperatingSystem() {
+short LinuxParser::GetNumberOfCores() {
+  char buffer[32];
+  snprintf(buffer, sizeof(buffer), "%s%s", Constants::ProcDirectory,
+           Constants::CpuinfoFilename);
+  std::ifstream cpuFile = Util::GetInputStream(buffer);
+  std::vector<std::string> values = Util::GetValues(cpuFile, "cpu cores");
+  int result = std::stoi(values[3]);
+
+  return result;
+}
+
+string LinuxParser::GetOSName() {
   string line{};
   string key{};
   string value{};
 
-  ifstream inputStream(Constants::kOSPath);
-  if (inputStream.is_open()) {
-    while (std::getline(inputStream, line)) {
-      line = Util::CustomReplace(line);
+  ifstream inputStream(Constants::OSRealesePath);
+    if (inputStream.is_open()) {
+      while (std::getline(inputStream, line)) {
+        line = Util::CustomReplace(line);
 
-      std::istringstream lineStream(line);
-      while (lineStream >> key >> value) {
-        if (key == "PRETTY_NAME") {
-          std::replace(value.begin(), value.end(), '_', ' ');
-          return value;
+        std::istringstream lineStream(line);
+        while (lineStream >> key >> value) {
+          if (key == "PRETTY_NAME") {
+            std::replace(value.begin(), value.end(), '_', ' ');
+            return value;
+          }
         }
       }
     }
-  }
 
   return value;
 }
 
-string LinuxParser::Kernel() {
+string LinuxParser::GetKernelVersion() {
   string line{};
   string os{}, kernel{};
   string placeHolder{};
 
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
-           Constants::kVersionFilename);
+  snprintf(buff, sizeof(buff), "%s%s", Constants::ProcDirectory,
+           Constants::VersionFilename);
   ifstream inputStream(buff);
   if (inputStream.is_open()) inputStream >> os >> placeHolder >> kernel;
 
   return kernel;
 }
 
-vector<int> LinuxParser::Pids() {
-  vector<int> pids;
-  pids.reserve(64);
-  string fileName{};
-  int pid{};
-
-  for (const auto &entry : fs::directory_iterator(Constants::kProcDirectory)) {
-    if (entry.is_directory()) {
-      fileName = entry.path().filename();
-      if (std::all_of(fileName.begin(), fileName.end(), isdigit)) {
-        pid = std::stoi(fileName);
-        pids.push_back(pid);
-      }
-    }
-  }
-
-  return pids;
-}
-
-float LinuxParser::MemoryUtilization() {
+double LinuxParser::MemoryUtilization() {
   string line{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
-           Constants::kMemInfoFilename);
+  snprintf(buff, sizeof(buff), "%s%s", Constants::ProcDirectory,
+           Constants::MemInfoFilename);
   ifstream inputStream(buff);
   int totalValue{}, freeValue{}, value{};
   string key{};
@@ -102,16 +97,16 @@ float LinuxParser::MemoryUtilization() {
     }
   }
 
-  return static_cast<float>(totalValue - freeValue) /
-         static_cast<float>(totalValue);
+  return static_cast<double>(totalValue - freeValue) /
+         static_cast<double>(totalValue);
 }
 
 double LinuxParser::UpTime() {
   std::string line{};
   double upTime{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
-           Constants::kUptimeFilename);
+  snprintf(buff, sizeof(buff), "%s%s", Constants::ProcDirectory,
+           Constants::UptimeFilename);
   ifstream inputStream(buff);
   if (inputStream.is_open()) {
     std::getline(inputStream, line);
@@ -121,73 +116,73 @@ double LinuxParser::UpTime() {
   return upTime;
 }
 
-long LinuxParser::Jiffies() {
-  string line;
-  string key;
-  long jiffies = 0;
-  char buff[32];
-  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
-           Constants::kStatFilename);
-  std::ifstream filestream(buff);
-  if (filestream.is_open()) {
-    std::getline(filestream, line);
-    std::stringstream linestream(line);
-    int value;
-    // sum the values from the first line of the file
-    // user + nice + system + idle + iowait + irq + softirq + steal
-    for (int i = 0; i < 9; ++i) {
-      if (i == 0) {
-        linestream >> key;
-      } else {
-        linestream >> value;
-        jiffies += value;
-      }
-    }
-  }
-  return jiffies;
-}
+// long LinuxParser::Jiffies() {
+//  string line;
+//  string key;
+//  long jiffies = 0;
+//  char buff[32];
+//  snprintf(buff, sizeof(buff), "%s%s", Constants::ProcDirectory,
+//           Constants::StatFilename);
+//  std::ifstream filestream(buff);
+//  if (filestream.is_open()) {
+//    std::getline(filestream, line);
+//    std::stringstream linestream(line);
+//    int value;
+//    // sum the values from the first line of the file
+//    // user + nice + system + idle + iowait + irq + softirq + steal
+//    for (int i = 0; i < 9; ++i) {
+//      if (i == 0) {
+//        linestream >> key;
+//      } else {
+//        linestream >> value;
+//        jiffies += value;
+//      }
+//    }
+//  }
+//  return jiffies;
+//}
 
-double LinuxParser::ActiveJiffies(int pid) {
-  string line{};
-  string placeholder{};
+// double LinuxParser::ActiveJiffies(int pid) {
+//  string line{};
+//  string placeholder{};
+//
+//  double jiffies{};
+//  double processJiffies{};
+//
+//  char buff[32];
+//  snprintf(buff, sizeof(buff), "%s%d/%s", Constants::ProcDirectory, pid,
+//           Constants::StatFilename);
+//  ifstream inputStream(buff);
+//  float runTime{1};
+//  if (inputStream.is_open()) {
+//    std::getline(inputStream, line);
+//    std::istringstream lineStream(line);
+//    double startTime{};
+//
+//    for (int tokenId = 1; tokenId < 23; ++tokenId) {
+//      if (tokenId == ProcessCpuStates::kCstime ||
+//          tokenId == ProcessCpuStates::kCutime ||
+//          tokenId == ProcessCpuStates::kStime ||
+//          tokenId == ProcessCpuStates::kUtime) {
+//        lineStream >> jiffies;
+//        processJiffies += jiffies;
+//
+//      } else if (tokenId == 22) {
+//        lineStream >> tokenId;
+//      } else {
+//        lineStream >> placeholder;
+//        lineStream.clear();
+//        lineStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+//      }
+//
+//      runTime =
+//          (UpTime() - startTime) / static_cast<double>(sysconf(_SC_CLK_TCK));
+//    }
+//  }
 
-  double jiffies{};
-  double processJiffies{};
-
-  char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d/%s", Constants::kProcDirectory, pid,
-           Constants::kStatFilename);
-  ifstream inputStream(buff);
-  float runTime{1};
-  if (inputStream.is_open()) {
-    std::getline(inputStream, line);
-    std::istringstream lineStream(line);
-    double startTime{};
-
-    for (int tokenId = 1; tokenId < 23; ++tokenId) {
-      if (tokenId == ProcessCpuStates::kCstime ||
-          tokenId == ProcessCpuStates::kCutime ||
-          tokenId == ProcessCpuStates::kStime ||
-          tokenId == ProcessCpuStates::kUtime) {
-        lineStream >> jiffies;
-        processJiffies += jiffies;
-
-      } else if (tokenId == 22) {
-        lineStream >> tokenId;
-      } else {
-        lineStream >> placeholder;
-        lineStream.clear();
-        lineStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      }
-
-      runTime =
-          (UpTime() - startTime) / static_cast<double>(sysconf(_SC_CLK_TCK));
-    }
-  }
-
-  return (processJiffies / static_cast<double>(sysconf(_SC_CLK_TCK))) /
-         runTime * 100;
-}
+//  return (processJiffies / static_cast<double>(sysconf(_SC_CLK_TCK))) /
+//         runTime * 100;
+//}
 
 std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
   string line{};
@@ -196,8 +191,8 @@ std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
   int runningProcesses{0};
   int found{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
-           Constants::kStatFilename);
+  snprintf(buff, sizeof(buff), "%s%s", Constants::ProcDirectory,
+           Constants::StatFilename);
   ifstream inputStream(buff);
   if (inputStream.is_open()) {
     while (std::getline(inputStream, line)) {
@@ -220,8 +215,8 @@ std::pair<int, int> LinuxParser::TotalAndRunningProcesses() {
 string LinuxParser::Command(int pid) {
   std::string cmdLine{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
-           Constants::kCmdlineFilename);
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::ProcDirectory, pid,
+           Constants::CmdlineFilename);
   ifstream inputStream(buff);
   if (inputStream.is_open()) std::getline(inputStream, cmdLine);
   return cmdLine;
@@ -232,8 +227,8 @@ string LinuxParser::Ram(int pid) {
   string key{};
   unsigned long ram{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
-           Constants::kStatFilename);
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::ProcDirectory, pid,
+           Constants::StatFilename);
   ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
@@ -250,13 +245,13 @@ string LinuxParser::Ram(int pid) {
   return std::to_string(ram / 1000);
 }
 
-unsigned long int LinuxParser::UpTime(int pid) {
+double LinuxParser::UpTime(int pid) {
   string line{};
   string placeHolder;
   unsigned long startTime{};
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
-           Constants::kStatFilename);
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::ProcDirectory, pid,
+           Constants::StatFilename);
   ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
@@ -274,35 +269,36 @@ unsigned long int LinuxParser::UpTime(int pid) {
   return startTime / sysconf(_SC_CLK_TCK);
 }
 
-long LinuxParser::IdleJiffies() {
-  string line;
-  string key;
-  long idleJiffies = 0;
-  char buff[32];
-  snprintf(buff, sizeof(buff), "%s%s", Constants::kProcDirectory,
-           Constants::kStatFilename);
-  std::ifstream filestream(buff);
-  if (filestream.is_open()) {
-    std::getline(filestream, line);
-    std::stringstream linestream(line);
-    int value;
-    // sum the iddle ticks
-    // idle + iowait
-    for (int i = 0; i < 6; ++i) {
-      if (i == 0) {
-        linestream >> key;
-      } else if (i > 3) {
-        linestream >> value;
-        idleJiffies += value;
-      } else {
-        linestream >> value;
-      }
-    }
-  }
-  return idleJiffies;
-}
+// long LinuxParser::IdleJiffies() {
+//  string line;
+//  string key;
+//  long idleJiffies = 0;
+//  char buff[32];
+//  snprintf(buff, sizeof(buff), "%s%s", Constants::ProcDirectory,
+//           Constants::StatFilename);
+//  std::ifstream filestream(buff);
+//  if (filestream.is_open()) {
+//    std::getline(filestream, line);
+//    std::stringstream linestream(line);
+//    int value;
+//    // sum the iddle ticks
+//    // idle + iowait
+//    for (int i = 0; i < 6; ++i) {
+//      if (i == 0) {
+//        linestream >> key;
+//      } else if (i > 3) {
+//        linestream >> value;
+//        idleJiffies += value;
+//      } else {
+//        linestream >> value;
+//      }
+//    }
+//  }
+//  return idleJiffies;
+//}
 
-unsigned long LinuxParser::ActiveJiffies() { return Jiffies() - IdleJiffies(); }
+// unsigned long LinuxParser::ActiveJiffies() { return Jiffies() -
+// IdleJiffies(); }
 
 string LinuxParser::Uid(int pid) {
   string line;
@@ -310,8 +306,8 @@ string LinuxParser::Uid(int pid) {
   string uid;
 
   char buff[32];
-  snprintf(buff, sizeof(buff), "%s%d%s", Constants::kProcDirectory, pid,
-           Constants::kStatusFilename);
+  snprintf(buff, sizeof(buff), "%s%d%s", Constants::ProcDirectory, pid,
+           Constants::StatusFilename);
   ifstream inputStream(buff);
 
   if (inputStream.is_open()) {
@@ -334,7 +330,7 @@ string LinuxParser::User(int pid) {
   string uid;
   string placeHolder;
 
-  ifstream fileStream(Constants::kPasswordPath);
+  ifstream fileStream(Constants::PasswordPath);
   if (fileStream.is_open()) {
     while (std::getline(fileStream, line)) {
       std::replace(line.begin(), line.end(), ':', ' ');

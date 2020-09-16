@@ -4,6 +4,8 @@
 
 #include "util.hpp"
 
+#include <iterator>
+
 std::string &Util::CustomReplace(std::string &line, const char &old1,
                                  const char &new1, const char &old2,
                                  const char &new2, const char &old3,
@@ -17,14 +19,37 @@ std::string &Util::CustomReplace(std::string &line, const char &old1,
   return line;
 }
 
-std::string Util::ElapsedTime(unsigned long seconds) {
-  const unsigned int hour = seconds / 3600;
-  unsigned int minute = (seconds % 3600) / 60;
-  unsigned int second = (seconds % 3600) % 60;
+std::string Util::GetProgressBar(double percent) {
+  std::string result{"0%"};
+  double size{50};
 
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%.2u:%.2u:%.2u", hour, minute, second);
-  std::string elapsedTime(buffer);
+  double bars{percent * size};
+  for (int i{0}; i < size; ++i) result.push_back(i < bars ? '|' : ' ');
+  char str[8];
+  snprintf(str, sizeof(str), "%.1f", percent * 100);
 
-  return elapsedTime;
+  return result + std::string(str) + "/100%";
+}
+
+std::vector<std::string> Util::GetValues(std::ifstream &ifstream,
+                                         const std::string& value) {
+  std::string line{};
+  while (std::getline(ifstream, line)) {
+    if (value.empty() || line.find(value) != std::string::npos) {
+      std::stringstream ss(line);
+      std::istream_iterator<std::string> beg(ss), end;
+      return std::vector<std::string>(beg, end);
+    }
+  }
+
+  return std::vector<std::string>();
+}
+std::ifstream Util::GetInputStream(const char *path) {
+  std::ifstream ifstream(path);
+
+  if (!ifstream) {
+    throw std::runtime_error("None -- existing PID");
+  }
+
+  return ifstream;
 }
