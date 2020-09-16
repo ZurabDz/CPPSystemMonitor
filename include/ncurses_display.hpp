@@ -14,7 +14,7 @@ namespace NCursesDisplay {
 void Display(System& system, int n);
 void DisplaySystem(System& system, WINDOW* window);
 void DisplayProcesses(System& system, WINDOW* window);
-std::string ProgressBar(double percent);
+
 }  // namespace NCursesDisplay
 
 #endif  // PLAYGROUND_NCURSES_DISPLAY_HPP

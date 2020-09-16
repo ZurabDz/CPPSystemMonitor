@@ -12,30 +12,16 @@
 using std::string;
 
 namespace LinuxParser {
-
-namespace Constants{
-  constexpr const char* const kProcDirectory = "/proc/";
-  constexpr const char* const kCmdlineFilename = "/cmdline";
-  constexpr const char* const kCpuinfoFilename = "/cpuinfo";
-  constexpr const char* const kStatusFilename = "/status";
-  constexpr const char* const kStatFilename = "/stat";
-  constexpr const char* const kUptimeFilename = "uptime";
-  constexpr const char* const kMemInfoFilename = "meminfo";
-  constexpr const char* const kVersionFilename = "/version";
-  constexpr const char* const kOSPath = "/etc/os-release";
-  constexpr const char* const kPasswordPath = "/etc/passwd";
-
-}
-
 // System
-[[nodiscard]] string OperatingSystem();
-
-[[nodiscard]] string Kernel();
-std::vector<int> Pids();
+[[nodiscard]] string GetOSName();
+[[nodiscard]] string GetKernelVersion();
+//std::vector<int> GetPids();
 std::pair<int, int> TotalAndRunningProcesses();
-float MemoryUtilization();
+double MemoryUtilization();
 [[nodiscard]] double UpTime();
-[[nodiscard]] unsigned long int UpTime(int pid);
+[[nodiscard]] double UpTime(int pid);
+
+short GetNumberOfCores();
 
 enum ProcessCpuStates {
   kUtime = 14,
@@ -45,10 +31,10 @@ enum ProcessCpuStates {
   kStarttime = 22
 };
 
-long Jiffies();
-long IdleJiffies();
-unsigned long ActiveJiffies();
-double ActiveJiffies(int pid);
+//long Jiffies();
+//long IdleJiffies();
+//unsigned long ActiveJiffies();
+//double ActiveJiffies(int pid);
 
 
 // Processes
